@@ -1,0 +1,219 @@
+참고 - https://nomadcoders.co/react-native-for-beginners/lectures/3131
+
+
+
+sample 참고: https://dribbble.com/shots/6019952-Do-More-List-View
+
+> npx expo init JokaWorkHardTravelHardApp
+> blank 선택
+> npx expo install react-native-web@~0.18.9 react-dom@18.1.0 @expo/webpack-config@^0.17.2
+> git 설정
+위 명령어로 프로젝트를 설치해준다.
+
+
+우선 우리 프로젝트에서 헤더를 만들고 헤더에는 Work와 Travel이라는 두개의 버튼을 만들 것이다. 각각의 버튼을 누르면 내용이 바뀌는 식으로 동작할 것이다.
+처음에는 스타일을 먼저 잡고 그 다음 버튼을 만들 것이다. 왜냐하면 아직 react native에서 버튼 누르기를 어떻게 다루는지 모르기 때문이다.
+ex) App.js
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, View } from "react-native";
+
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <Text style={styles.btnText}>Work</Text>
+        <Text style={styles.btnText}>Travel</Text>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+    paddingHorizontal: 20,
+  },
+  header: {
+    justifyContent: "space-between",
+    flexDirection: "row",
+    marginTop: 100,
+  },
+  btnText: {
+    fontSize: 44,
+    fontWeight: "600",
+    color: "white",
+  },
+});
+
+이렇게 header를 구현했다. 핵심은 유저가 work를 클릭하면 work는 하얀색이어야한다. 즉 work와 travel중에 활성화된 버튼은 하얀색, 비활성화된 버튼은 약간 회색으로 구현할 것이다.
+
+그리고 색상에 대해 중요하다고 생각하는데 좀 더 얘기를 할 것이다. App.js와 같은 위치에 colors.js라는 새 파일을 만들어 볼 것이다. theme object(colors.js)를 만들어 놓으면 유용하다. 만들어 놓은 theme object를 export하고 App.js에서 import해서 사용할 것이다.
+ex) colors.js
+export const theme = {
+  bg: "black",
+  gray: "#3A3D40",
+}
+
+ex) App.js
+...
+import { theme } from "./colors";
+...
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.bg,        // this
+    paddingHorizontal: 20,
+  },
+...
+
+그리고 활성화되지 않은 버튼의 색상도 적용해줄 것이다.
+ex) App.js
+...
+  btnText: {
+    fontSize: 44,
+    fontWeight: "600",
+    color: theme.gray,
+  },
+...
+
+React Native에는 흥미로운 3가지 컴포넌트들이 있다. 첫 번째는 TouchableOpacity이다. TouchableOpacity는 View와 비슷한 box 같은 component인데 누르는 이벤트를 listen할 준비가 된 view라고 할 수 있다. 그리고 이름뒤에 opacity가 있는 이유는 투명도와 관련된 애니메이션 효과가 있기 때문이다.
+React Native TouchableOpacity - https://reactnative.dev/docs/next/touchableopacity
+ex) App.js
+...
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { theme } from "./colors";
+
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity>
+          <Text style={styles.btnText}>Work</Text>
+        </TouchableOpacity>
+        <Text style={styles.btnText}>Travel</Text>
+      </View>
+    </View>
+  );
+}
+...
+
+보다시피 work라는 Text component만 TouchableOpacity 안에 들어가 있는데 화면에서 눌러보면 약간 투명해지는 것을 확인할 수 있다. 즉, TouchableOpacity는 누르면 투명해지는 효과가 있는 버튼이다.
+
+다른 종류의 Touchable도 있는데 바로 TouchableHighlight이다. TouchableHighlight는 TouchableOpacity보다 더 많은 속성(props)이 있다.
+React Native TouchableHighlight - https://reactnative.dev/docs/next/touchablehighlight
+activeOpacity라는 prop으로 클릭했을 때의 투명도를 설정 할 수 있다.(TouchableOpacity도 있는 기능)
+ex) <TouchableOpacity activeOpacity={0}></TouchableOpacity>
+
+TouchableHighlight라는 component는 더 많은 속성을 가지고 있고 약간 다르다. TouchableHighlight는 유저가 요소를 클릭했을 때 배경색이 바뀌도록 해준다.
+ex) App.js
+...
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TouchableHighlight,
+} from "react-native";
+import { theme } from "./colors";
+
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity>
+          <Text style={styles.btnText}>Work</Text>
+        </TouchableOpacity>
+        <TouchableHighlight>
+          <Text style={styles.btnText}>Travel</Text>
+        </TouchableHighlight>
+      </View>
+    </View>
+  );
+}
+...
+
+화면에서 확인해보면 아무일도 일어나지 않는다. 왜냐면 우리는 TouchableHighlight에 몇가지 속성을 추가해야하기 때문이다. 가장 중요한 것은 onPress이다. onPress는 유저가 Touchable을 눌렀을 때 실행되는 이벤트를 말한다. TouchableOpacity 역시 onPress를 똑같이 사용할 수 있다. onPress에는 onPressIn, 손가락이 그 영역 안에 들어갈 때를 말하는 것이고 onPressOut을 손가락이 그 영역에서 벗어날 때를 말한다. onLongPress는 손가락이 영역에 들어가서 오랫동안 머무를 때를 말한다. press에서 우리가 직접 in과 out을 특정지을 필요는 없다. 단지 press를 특정지으면 된다. 왜냐면 press는 손가락이 들어갔다 나오는 바로 그 행위를 말하기 때문이다. 손가락이 영역에 있을 때만 적용하고 싶을 수도 있고 손가락이 그 영역에서 벗어났을 때만 적용할 수 있기 때문에 상황에 따라 사용성이 달라질 수는 있다.
+이제 다시 onPress를 테스트해볼 것이다.
+ex) App.js
+...
+        <TouchableHighlight onPress={() => console.log("pressed")}>
+...
+
+Travel 버튼을 누르고 개발자도구 console에서 확인해보면 pressed라는 문구가 출력되는 것을 확인할 수 있다.
+TouchableHighlight는 TouchableOpacity와는 다르다. underlayColor를 설정해야 하기 때문이다. 이 underlayColor를 적용해서 확인해 볼 것이다.
+ex) App.js
+...
+        <TouchableHighlight underlayColor="#DDDDDD" onPress={() => console.log("pressed")}>
+...
+
+Travel 버튼을 눌러보면 눌렀을 때 TouchableHighlight component의 영역이 적용한 색상으로 배경이 바뀌는 것을 확인할 수 있다. 이 속성은 다른 곳에서도 적용할 수 있는데 개인적으로는 TouchableOpacity에서 더 많이 사용한다고 한다. 왜냐면 배경색을 보여주고 싶을 때가 드물기 때문이다. 즉, underlayColor는 눌렀을 때의 배경색을 바꾸어 주고 싶을 때 적용해주면 된다.(아까 알려준 activeOpacity도 사용할 수 있음, activeOpacity는 text만? 자식요소만? 투명하게 해준다.) TouchableHighlight보다 TouchableOpacity를 더 선호한다고 한다.
+그리고 다른 하나는 TouchableWithoutFeedback이다.
+React Native TouchableWithoutFeedback - https://reactnative.dev/docs/next/touchablewithoutfeedback
+TouchableWithoutFeedback도 Touchable Component인데 화면 가장 위에서 일어나는 탭 이벤트를 listen하는 것이다. 근데 이건 그래픽이나 다른 UI 반응을 보여주지 않는다. UI, 즉, 어플리케이션의 생김새는 변하는게 없을 것이다.
+TouchableHighlight 자리를 TouchableWithoutFeedback으로 바꿔서 확인해볼 것이다.
+ex) App.js
+...
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TouchableHighlight,
+  TouchableWithoutFeedback,
+} from "react-native";
+import { theme } from "./colors";
+
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity>
+          <Text style={styles.btnText}>Work</Text>
+        </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={() => console.log("pressed")}>
+          <Text style={styles.btnText}>Travel</Text>
+        </TouchableWithoutFeedback>
+...
+
+적용하고 Travel 버튼을 눌러 확인해보면 console에 pressed라는 문구가 뜨면서 잘 작동하지만 어떤 애니메이션도 없다. 이것도 자주 사용한다고 하지만 주로 TouchableOpacity를 사용한다고 한다. 유저에게 버튼이 눌렸다는 것을 알려주기 위해서이다. 반대로 보여주고 싶지 않을 때는 TouchableWithoutFeedback을 사용하면 된다. 이것도 onPress, onPressIn, onPressOut 같은 모든 이벤트들이 포함되어 있는 view이다. 하지만 이것을 사용하면 UI 변화는 없다.
+
+여기까지가 Touchable에 대한 설명이었지만 새로운게 한가지 더 있다. Pressable이라는 것이다.
+React Native Pressable - https://reactnative.dev/docs/next/pressable
+Pressable은 TouchableWithoutFeedback과 같지만 좀 더 새롭다. 적용시켜 보면
+ex) App.js
+...
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TouchableHighlight,
+  TouchableWithoutFeedback,
+  Pressable
+} from "react-native";
+import { theme } from "./colors";
+
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity>
+          <Text style={styles.btnText}>Work</Text>
+        </TouchableOpacity>
+        <Pressable onPress={() => console.log("pressed")}>
+          <Text style={styles.btnText}>Travel</Text>
+        </Pressable>
+...
+
+TouchableWithoutFeedback과 같이 Travel을 누르고 있어도 아무것도 변하지 않는다. 하지만 Pressable은 더 많은 설정을 줄 수 있다. TouchableOpacity를 보면 만약 더 확장성있고 미래에도 사용가능한 터치기반의 input을 다루길 원한다면 Pressable을 확인해보라고 공식문서에서 알려주고 있다. 그래서 아마도 나중에는 TouchableOpacity가 사라질 가능성이 있다. 아무튼 Pressable에는 우리가 사용하는 익숙한 이벤트 속성들을 가지고 있다. 예를 들어 아까 사용했던 onPress, onPressIn, onPressOut, onLongPress 등 모두 방금 배운 3가지의 touchable component에도 있던 것들이다. Pressable 다른 종류의 설정도 가지고 있는데 delayLongPress이다. 무슨뜻이냐면 얼마나 길게 누르면 반응하게 만들지 설정할 수 있다는 것이다.
+React Native delayLongPress - https://reactnative.dev/docs/next/pressable#delaylongpress
+아마 TouchableOpacity에는 없는 속성일 것이다. 말고도 조금씩 다르고 새로운 것들이 있다.
+그리고 하나 더 중요한건 hitSlope라는 속성이 있다. hotSlope는 요소 바깥 어디까지 탭 누르는 것을 감지할지 정하는 것이다. 버튼의 크기보다 더 큰 범위에서 버튼을 누를 수 있도록 해주는 것이다. 보다시피 Pressable에서는 더 다양한 속성을 사용할 수 있다. 하지만 그래도 우리는 TouchableOpacity를 사용할 것이다.
+
+다음 강의에서는 Work와 Travel을 왔다갔다하는 것을 배워볼 것이다. 그리고 그 변화를 UI를 통해서 볼 수 있게 할 것이고 text input도 배워볼 것이다.
