@@ -1,0 +1,104 @@
+참고 - https://nomadcoders.co/react-native-for-beginners/lectures/3133
+
+
+
+이제 유저가 버튼 누르는 걸 감지하도록 만들어 볼 것이다. submit을 누르면 onSubmitEditing 이벤트가 발생하도록 할 것이다.
+React Native TextInput onSubmitEditing - https://reactnative.dev/docs/textinput#onsubmitediting
+ex) App.js
+...
+  const addToDo = () => {
+    alert(text);
+  };
+...
+      <TextInput
+        onSubmitEditing={addToDo}
+        onChangeText={onChangeText}
+        value={text}
+        placeholder={working ? "Add a To Do" : "Where do you want to go?"}
+        style={styles.input}
+      />
+...
+
+TextInput에 아무거나 입력하고 submit을 하면 alert창에 우리가 입력한 문구가 뜬다.
+returnKeyType prop으로 키패드의 return? submit 버튼의 문구를 바꿔줄 것이다.
+ex) App.js
+...
+      <TextInput
+        onSubmitEditing={addToDo}
+        onChangeText={onChangeText}
+        returnKeyType="done"              // this, done이 기본값인듯
+        value={text}
+        placeholder={working ? "Add a To Do" : "Where do you want to go?"}
+        style={styles.input}
+      />
+...
+
+이제 todo를 추가하지 않을 거라면 취소할 수 있게 만들고 todo가 비었는지 안비었는지 학인도 해볼 것이다.(confirm?)
+ex) App.js
+...
+  const addToDo = () => {
+    if (text === "") {
+      return;
+    }
+    // save to do
+    setText("");
+  };
+...
+
+이제 todo들을 위한 state를 만들어볼 것이다.
+ex) App.js
+...
+  const [toDos, setToDos] = useState({});
+...
+
+보통 초기값으로 array를 넣어주지만 우리는 object를 넣어줄 것이다. 'hashmap' 같은 것을 만들 것이다.
+hashmap 참고 - https://coding-factory.tistory.com/556
+
+
+우리가 만들 toDos object의 예시를 보여줄 것이다.
+> const toDos = {};
+처음 object를 생성할 때 알다시피 비어있는 상태로 시작한다.
+Date.now() 를 toDos의 id처럼 사용할 것이다.
+> toDos[Date.now()] = { text: "record", work: true };
+그럼 toDos는 아래와 같은 형태가 되고 Date.now()는 text와 work라는 payload를 가지게 된다.
+toDos: {
+  1675844363107: {
+    text: "record",
+    work: true
+  }
+}
+이건 매우 유용한데 왜냐하면 todo 하나를 지우고 싶다면 Date.now()인 id 하나만 지우면 되기 때문이다. 업데이트를 하고 싶다면 id를 찾아서 원하는 걸 업데이트하면 된다.
+여기서 한가지 더 추가하고 싶은 것이 있다. 우리가 했었던 toDos[Date.now()] = {} 처럼 toDos를 추가해 줬는데 toDos[Date.now()]는 react JS에서 허용되지 않는다. react JS에서는 state를 직접 수정하지 않는다는 것을 기억해야한다.(toDos라는 state가 있으면 toDos를 건들지 말고 setToDos를 건드리라는 의미인듯) 우리는 항상 새로운 object인 newToDos를 보내줘야한다. 그래서 이전 toDos를 가져다가 새로운 todo와 함께 합쳐야한다. 다시말하지만 우리는 절대 state를 직접 수정하면 안되고 setState를 이용해서 수정해야한다.
+
+그래서 우리는 object assign을 사용할 것이다. object assign은 object를 가져다가 다른 object와 합쳐준다. 그 다음 새로운 object를 return 해준다.
+> const toDos = {};
+> toDos[Date.now()] = { work: false };
+그럼 toDos는 Date.now()라는 id와 work라는 property를 가진다. 이 때 우리가 work를 true로 해주거나 추가하려고 할 때 todo를 변형하는 대신에 object assign을 쓸 것이다.
+> Object.assign({}, toDos, { [Date.now()]: { work: true } });
+그럼 toDos에는 추가된 새로운 Date.now() id와 work: true라는 property를 가지게 된다. 보다시피 이건 두개의 object를 묶어준다.
+이게 우리가 사용하게될 function이다.
+
+ex) App.js
+...
+  const [working, setWorking] = useState(true);
+  const [text, setText] = useState("");
+  const [toDos, setToDos] = useState({});
+  const travel = () => setWorking(false);
+  const work = () => setWorking(true);
+  const onChangeText = (payload) => setText(payload);
+  const addToDo = () => {
+    if (text === "") {
+      return;
+    }
+    const newToDos = Object.assign({}, toDos, {
+      [Date.now()]: { text, work: working },
+    });
+    setToDos(newToDos);
+    setText("");
+  };
+  console.log(toDos);
+...
+
+이제 우리는 두개의 Object를 state 수정 없이 결합한다. 프론트에서 TextInput에 아무런 문자를 입력하고 여러번 Work와 Travel을 번갈아 가면서 submit하면 toDos에 추가되어 console에 출력하게 된다. (work는 현재 Work(true)에 있는지 Travel(false)에 있는지 구분)
+
+여기까지 react native가 아닌 로직파트였고 그저 자바스크립트였다. 다음 강의에서는 todos를 print할 것이다. 그리고 스크롤부를 만들어 todo가 TextInput 아래에 나타나도록 할 것이다.

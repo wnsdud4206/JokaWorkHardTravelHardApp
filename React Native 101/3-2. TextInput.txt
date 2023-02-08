@@ -2,3 +2,295 @@
 
 
 
+우선 현재 work에 있는지 확인하는 state부터 만들 것이다. 그리고 누군가가 Work 텍스트를 누르면 work 함수를 호출할 것이다.
+ex) App.js
+...
+export default function App() {
+  const [working, setWorking] = useState(true);
+  const travel = () => setWorking(false);
+  const work = () => setWorking(true);
+  
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={work}>
+          <Text style={styles.btnText}>Work</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={travel}>
+          <Text style={styles.btnText}>Travel</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+...
+
+아직 아무런 변화도 일어나지 않는다. 이제 스타일을 적용시켜줄 것이다. styles.btnText에서 fontWeight와 fontSize는 그대로 두고, color를 white나 gray으로 바꾸는 것이다. 우선 styles.btnText의 color를 지우고 component에 style을 object로 사용하면서 동시에 확장할 것이다. (style={{...steyls.btn, color: "white"}} 처럼 인듯)
+ex) App.js
+...
+export default function App() {
+  const [working, setWorking] = useState(true);
+  const travel = () => setWorking(false);
+  const work = () => setWorking(true);
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={work}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: working ? "white" : theme.gray,
+            }}
+          >
+            Work
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={travel}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: !working ? "white" : theme.gray,
+            }}
+          >
+            Travel
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.bg,
+    paddingHorizontal: 20,
+  },
+  header: {
+    justifyContent: "space-between",
+    flexDirection: "row",
+    marginTop: 100,
+  },
+  btnText: {
+    fontSize: 44,
+    fontWeight: "600",
+    color: "white",
+  },
+});
+
+확인해보면 잘 작동하는 것을 볼 수 있다.
+이제 text input을 다뤄볼 것이다. react native에는 text input이 있고 HTML, CSS처럼 textarea 같은 것이 없다. text input에는 엄청 많은 속성이 있다.
+React Native TextInput - https://reactnative.dev/docs/textinput
+위의 공식문서를 보면 정말 많은 props가 있는 것을 볼 수 있다.
+text input은 react native에서 유저가 text를 쓸 수 있는 유일한 방법이다. 아까 말한 것처럼 HTML처럼 textarea나 input 같은 것이 없다.
+우선 react-native에서 TextInput을 import 해서 필요에 맞게 바꿔서 사용해볼 것이다.
+ex) App.js
+...
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
+...
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={work}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: working ? "white" : theme.gray,
+            }}
+          >
+            Work
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={travel}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: !working ? "white" : theme.gray,
+            }}
+          >
+            Travel
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <View>
+        <TextInput />             // this
+      </View>
+    </View>
+  );
+...
+
+확인해보면 아직 나타나지 않는다. 그래서 스타일의 줘볼 것이다.
+ex) App.js
+...
+      <View>
+        <TextInput style={styles.input} />
+      </View>
+...
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.bg,
+    paddingHorizontal: 20,
+  },
+  header: {
+    justifyContent: "space-between",
+    flexDirection: "row",
+    marginTop: 100,
+  },
+  btnText: {
+    fontSize: 44,
+    fontWeight: "600",
+    color: "white",
+  },
+  input: {                              // this
+    backgroundColor: "white",
+  }
+});
+...
+
+확인해보면 Work와 Travel 밑에 가로로 긴 하얀박스가 있는 것을 볼 수 있고 누르면 글자를 적을 수 있다.
+이제 이걸 필요에 맞게 바꿔볼 것이다. 먼저 placeholder라는 prop가 있다.
+TextInput placeholder - https://reactnative.dev/docs/textinput#placeholder
+만약 work에 있다면 TextInput placeholder에 "할 일을 추가하세요" 같은 문구를 넣을 것이다.
+ex) App.js
+...
+      <View>
+        <TextInput
+          placeholder={working ? "Add a To Do" : "Where do you want to go?"}
+          style={styles.input}
+        />
+      </View>
+...
+
+다음은 TextInput을 감싸고 있는 View는 필요없고 TextInput component를 좀 더 이쁘게 스타일을 입혀줄 것이다.
+ex) App.js
+...
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={work}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: working ? "white" : theme.gray,
+            }}
+          >
+            Work
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={travel}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: !working ? "white" : theme.gray,
+            }}
+          >
+            Travel
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <TextInput
+        placeholder={working ? "Add a To Do" : "Where do you want to go?"}
+        style={styles.input}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  ...
+  input: {
+    backgroundColor: "white",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginTop: 20,
+    fontSize: 18,
+  },
+});
+
+이제 CSS 부분은 끝났고 다시 props를 보도록 할 것이다. onFocus라는 prop이 있는데 화면을 터치하면 쓸 준비가 된 상태를 말한다. 보다시피 onPressIn, onPressOut도 있다. 그리고 우리는 onChangeText라는 prop도 있는데 onChangeText에서 우리가 입력한 Text를 받을 수 있다. 그리고 keyboardType이라는 prop도 있는데 가끔 유저가 이메일이나 폰번호를 쳐야 할 때 keyboard type을 바꿀 수 있도록 해준다.
+React Native TextInput prop keyboardType - https://reactnative.dev/docs/textinput#keyboardtype
+공식문서에서 보다시피 크로스 플랫폼으로 적용되는 여러 키보드 타입들이 있다.
+예를들어 <TextInput keyboardType="number-pad" /> 라고 하면 입력할 때 숫자만을 쓸수 있는 키패드가 나온다. 그 이에도 email-address, phone-pad 등 필요에따라 다양하게 적용해서 사용할 수 있다. 그리고 keyboardTyp 중에서도 안드로이드, iOS 각각에서만 사용할 수 있는 값들도 있다. 이렇게 prop들을 통해서 많은 것들을 설정할 수 있다.
+
+그리고 하나만 더 보자면 이것들은 자주 쓰게 될 것들인데 바로 returnKeyType이랑 returnKeyLable(android only)이다. 이중에 returnKeyType는 사용하면 키패드의 우측 하단에 있는 return 혹은 확인? 버튼의 모양을 바꿀 수 있다. 예를 들어 <TextInput returnKeyType="send" />라고 해주면 iOS에서는 파란색 박스로 send라는 문구가 적혀있는 것을 확인할 수 있다. 그 외에도 none, go, next, search, 그리고 방금 봤던 send가 있고 iOS에서만 사용할 수 있는 previous와 안드로이드에서만 사용할 수 있는 emergency-call과 google, join, route, yahoo 등이 있다. 그리고 안드로이드에서는 아까 언급했던 returnKeyLabel prop으로 label을 바꿔줄 수도 있다. 무슨 말이냐면 안드로이드에서는 returnKeyLabel이라는 prop을 사용하면 원하는 아무 문구나 사용할 수 있다는 것이다.
+이게 바로 props를 통해 react 개발자들이 시스텝을 설정하는 방법이다.
+만약 비밀번호를 입력하는 TextInput을 사용할 때 secureTextEntry라는 prop을 사용하면 입력할 때 출력되는 문구가 ●처럼 보일 것이다.
+
+multiline이라는 prop은 한 줄 이상 쓰는 경우 사용하는 prop이다. 사용하지 않으면 singleline이 된다.
+placeholder의 글자 색상도 바꿀 수 있는데 placeholderTextColor라는 prop을 사용하면 된다.
+
+
+이제 우리에게 필요한 건 텍스트가 어떻게 변했는지 확인하는 것이다. 그건 아까 언급했던 onChangeText prop을 적용하면 된다.
+ex) App.js
+...
+  const onChangeText = (e) => console.log(e);
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={work}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: working ? "white" : theme.gray,
+            }}
+          >
+            Work
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={travel}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: !working ? "white" : theme.gray,
+            }}
+          >
+            Travel
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <TextInput
+        onChangeText={onChangeText}         // this
+        placeholder={working ? "Add a To Do" : "Where do you want to go?"}
+        style={styles.input}
+      />
+    </View>
+  );
+...
+
+이제 TextInput에 입력하면 console에 keyboard를 누를 때 마다 입력한 문구가 출력되는 것을 확인할 수 있다.
+
+마지막으로 state에 유저가 입력한 텍스트를 저장해야한다.
+ex) App.js
+...
+  const [working, setWorking] = useState(true);
+  const [text, setText] = useState("");                 // this
+  const travel = () => setWorking(false);
+  const work = () => setWorking(true);
+  const onChangeText = (payload) => setText(payload);   // this
+
+  return (
+    <View style={styles.container}>
+      ...
+      <TextInput
+        onChangeText={onChangeText}
+        value={text}
+        placeholder={working ? "Add a To Do" : "Where do you want to go?"}
+        style={styles.input}
+      />
+    </View>
+  );
