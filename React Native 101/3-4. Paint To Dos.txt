@@ -2,3 +2,103 @@
 
 
 
+만약 Object.assign()이 이해되지 안는다면 다른 방법도 있다. 저번 강의에서도 말했지만 toDo state의 내용을 새로운 toDo의 내용과 합치려고 하고 있다.(toDo state의 불변성을 지키면서) ES6 문법인 spread 문법을 사용해 내용을 합쳐줄 것이다.
+ex) App.js
+...
+  const addToDo = () => {
+    if (text === "") {
+      return;
+    }
+    const newToDos = { ...toDos, [Date.now()]: { text, work: working } };
+    setToDos(newToDos);
+    setText("");
+  };
+...
+
+이제 toDos를 paint 할 것이다. 우선 스크롤해서 사람들이 많은 todo를 추가 할 수 있도록 scroll view를 import 해서 사용해줄 것이다. 우리가 jsx에서 array를 출력할 때 [].map()처럼 사용하지만 toDos는 object이다. Object.keys(toDos) 를 해주면 toDos의 id들이 array안에 담기게 된다. 이 array를 가지고 map을 사용할 수 있다.
+ex) Object.keys(toDos).map(key => toDos[key]);
+그럼 결과로 각 key의 내용을 얻게 된다.
+
+이제 이 방법을 우리 프로젝트에 적용하고 스타일까지 입혀 볼 것이다.
+ex) colors.js
+export const theme = {
+  bg: "black",
+  gray: "#3A3D40",
+  toDoBg: "#5C5C60",
+};
+
+ex) App.js
+...
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+} from "react-native";
+import { theme } from "./colors";
+
+export default function App() {
+  const [working, setWorking] = useState(true);
+  const [text, setText] = useState("");
+  const [toDos, setToDos] = useState({});
+  const travel = () => setWorking(false);
+  const work = () => setWorking(true);
+  const onChangeText = (payload) => setText(payload);
+  const addToDo = () => {
+    if (text === "") {
+      return;
+    }
+    const newToDos = { ...toDos, [Date.now()]: { text, work: working } };
+    setToDos(newToDos);
+    setText("");
+  };
+
+  return (
+    <View style={styles.container}>
+      ...
+      <TextInput
+        onSubmitEditing={addToDo}
+        onChangeText={onChangeText}
+        returnKeyType="done"
+        value={text}
+        placeholder={working ? "Add a To Do" : "Where do you want to go?"}
+        style={styles.input}
+      />
+      <ScrollView>
+        {Object.keys(toDos).map((key) => (
+          <View style={styles.toDo} key={key}>
+            <Text style={styles.toDoText}>{toDos[key].text}</Text>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  ...
+  input: {
+    backgroundColor: "white",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginVertical: 20,
+    fontSize: 18,
+  },
+  toDo: {
+    backgroundColor: theme.gray,
+    marginBottom: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+  },
+  toDoText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+});
+
+todo에 스크롤뷰가 적용되었고 todo가 Work와 Travel에서 모두 추가되는 것을 확인할 수 있다. 이렇게 만들고 드는 생각은 왜 Work와 Travel 각각에서 추가한 todo의 구분이 없다는 것이다. 이 부분은 다음 강의에서 Work todo들을 Work에서만 Travel todo들은 Travel에서만 나오도록 구분할 것이고 아이콘도 추가해 줄 것이다.

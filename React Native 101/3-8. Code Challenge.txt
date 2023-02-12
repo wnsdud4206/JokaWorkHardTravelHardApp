@@ -1,0 +1,19 @@
+참고 - https://nomadcoders.co/react-native-for-beginners/lectures/3138
+
+
+
+이번 강의의 챌린지에 대해서 설명할 것이고 다음 강의에서는 내가 작업한 것을 어떻게 공유할 수 있을지 보여줄 것이다. 어떻게 어플리케이션을 빌드해서 다른 사람에게 보여줄 수 있는지 알려줄 것이다.
+
+챌린지는 세가지가 있다.
+1. 강의에서 Work mode에서 Travel mode로 바꿔주었는데 어플리케이션을 재시작하면 다시 Work mode에서 시작하게 된다. 이건 좋지 않다. 즉 어플리케이션이 내가 어디 있었는지를 기억하게 하는 것이다. 그래서 Travel로 간 후 어플을 재시작하면 처음부터 Travel mode에서 시작하게 되면 좋을 것 같다. 이렇게 하려면 AsyncStorage에 무언가를 저장하고 복원해야 할 것이다.
+
+2. 이것은 todo list여야 하는데 todo function은 아직 아무것도 작성하지 않았다.
+sample 참고 - https://dribbble.com/shots/6019952-Do-More-List-View
+사이트엔 수정된 것 같은데 강의에서의 sample을 보면 todo가 끝났거나 완료된 todo들이 있다. 우린 삭제 기능을 만들었지만 사실 삭제하기보다 완료상태로 두고 싶다. 그래서 삭제버튼 왼쪽에 버튼을 하나 만드는 것이다. 이것을 클릭하면 todo를 완료로 바꾸는 것이다. 이렇게 하려면 todo 구조에 한가지 더 만들어야 한다.(text, working 말고) completed나 finished로 true 혹은 false 등 무엇이든지 있어야 할 것이다. 이렇게 하려면 function 하나를 만들어서 key값으로 todo를 찾을 수 있게 해야하고 todo를 수정해서 done: true/false 같이 수정해야 되고 수정된 todo를 가지고 state에 다시 두어야 하는 것이다.
+다시 말하자면 sample에 있는 어플리케이션은 완료된 todo도 보여주고 있는데 우린 아직 그 function이 없다. todo를 지우는 function만 있다.우리가 할 알은 삭제버튼 왼쪽에 아이콘 버튼을 하나 만들어서 function을 하나 더 작성해야 한다. function을 만들어서 key를 통해 todo를 찾고 우리가 만들 새로운 property를 수정해야 한다. 예를 들어 completed: true 혹은 false가 될 것이다. 중요한 것은 state를 mutate하면 안된다는 것이다. 그나마 희소식은 deleteToDo처럼 이미 그렇게 한 것이 있다는 것이다. 새 object를 복사해서 그 object에 newToDos[key] = { completed: true }; 처럼 저장하고 newToDos를 state와 AsyncStorage에 저장하면 될 것이다.(setToDos, saveToDos)
+
+3. 유저가 text를 수정할 수 있도록 해주는 것이다. 생각해보면 이거 앞의 것과 똑같은 function이다. 우리가 todo의 완료 여부를 표시할 수 있다면 그건 todo를 수정할 수도 있다는 뜻이다. 그렇게 되면 todo에는 3개의 아이콘 버튼이 있게 될 것이다.(완료, 수정, 삭제) 또 todo를 수정하는 동안에는 Text component로 text를 보여주는 대신 그곳에 작은 text input을 볼 수 있어야 할 것이다. 이제 View styles.toDo 와 하위 component들은 다른 state와 함께 다른 component로 옮겨야 할 것이다.
+
+
+
+다음 강의에서는 Expo를 가지고 우리가 한 결과물을 어떻게 공유하는지 살펴볼 것이고 이 어플을 어떻게 앱스토어에 올리는 지(플레이스토어는?) 알아볼 것이고 Expo의 문제점이 무엇인지, 다음으로 해야 할 것도 살펴볼 것이다. Expo는 완벽하기 않기 때문에 노마드가 왜 Expo를 사용하지 않는지에 대해서도 알아볼 것이다.

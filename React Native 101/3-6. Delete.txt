@@ -1,0 +1,371 @@
+참고 - https://nomadcoders.co/react-native-for-beginners/lectures/3136
+
+
+
+/*
+댓글
+1.
+삭제 함수 내에서
+const newToDos = {...toDos} 처럼 새로운 객체 내에 기존 객체의 key-value를 풀어놓는 대신
+const newToDos = todo 와 같은 형태로 복사하게 되면 이후
+setToDos(newToDos)로 state를 변경할 때 자동으로 re-render가 되지 않습니다.
+
+새로운 객체로 변경하는 것이 아니라 참조값을 복사하여 그 내용만을 변경시켰기 때문에 re-render의 조건이 되는 state의 변경으로 인식하지 않는다고 하네요. 같은 궁금증을 가지신 분들이 있을까 공유합니다.
+
+https://stackoverflow.com/questions/56266575/why-is-usestate-not-triggering-re-render
+*/
+
+
+
+ToDo 앱을 거의 다 만들었다. 이제 해야할 것은 toDos를 지우는 것이다. 버튼을 만들고 삭제하고 싶은지 아닌지 확인하는 확인 메시지를 보여줄 것이다.
+이것을 하기 전에 상기시켜주고 싶은 것이 있다. loadToDos function에서 await를 사용하고 있는데 error가 발생할 수 있다. 그래서 try catch 문을 사용하는 것을 권장한다.(이미 했음) 또 모든 폰이 완전 빠른 것은 아니기 때문에 로딩을 위한 state가 있으면 더 좋을 것 같다. 앱을 시작하는 순간 toDos를 로딩하기 시작하니까 toDos를 로딩하고 있다고 보여주면 좋을 것이다. 그리고 우린 로딩 components 사용 방법을 이미 알고 있다. (전에 날씨 앱에서 사용했었다.) 다시 말하자면 toDos를 로딩하고 있다고 보여주거나 로딩이 끝났거나 에러가 있다고 보여 주면 좋을 것이다.
+
+이제 toDo를 지우는 버튼을 만들어 볼 것이다. 임시로 ❌ 이모지를 사용하고 나중에 font awesome에서 다른 아이콘으로 변경해줄 것이다.
+그리고 styles에 toDo의 속성 중에 flexDirection을 row로 바꿔주고 다른 속성들을 추가해줄 것이다.
+ex) App.js
+...
+      <ScrollView>
+        {Object.keys(toDos).map((key) =>
+          toDos[key].working === working ? (
+            <View style={styles.toDo} key={key}>
+              <Text style={styles.toDoText}>{toDos[key].text}</Text>
+              <Text>❌</Text>               // this
+            </View>
+          ) : null,
+        )}
+      </ScrollView>
+...
+  toDo: {
+    backgroundColor: theme.gray,
+    marginBottom: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    flexDirection: "row",                   // this under
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+...
+
+이제 이 버튼에 TouchableOpacity를 넣어줄 것이다.
+ex) App.js
+...
+              <TouchableOpacity>
+                <Text>❌</Text>
+              </TouchableOpacity>
+...
+
+다음은 deleteToDo라는 function을 만들 것이다. 그리고 deleteToDo는 toDo의 id를 받을 것이다. 그리고 이 function을 주려면 TouchableOpacity component의 onPress 안에 익명함수(anonymous function)으로 넣어주면 된다. 이 function을 deleteToDo를 id와 함께 호출할 것이다. (id는 toDos object의 key다. key는 날짜)
+ex) App.js
+...
+  const deleteToDo = (key) => {};
+...
+  return (
+    <View style={styles.container}>
+      ...
+      <ScrollView>
+        {Object.keys(toDos).map((key) =>
+          toDos[key].working === working ? (
+            <View style={styles.toDo} key={key}>
+              <Text style={styles.toDoText}>{toDos[key].text}</Text>
+              <TouchableOpacity onPress={() => deleteToDo(key)}>
+                <Text>❌</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null,
+        )}
+      </ScrollView>
+    </View>
+  );
+...
+
+이제 새로운 것을 만들어야 한다. newToDos처럼 key가 없는 object를 만들어 줘야 한다?
+deleteToDo에서 받아오는 key를 이용해서 삭제해줘야한다. 이것을 하려면 newToDos가 deleteToDo function에 있는 이전 toDos라고 알려주기만 하면된다?
+ex) App.js
+...
+  const deleteToDo = async (key) => {
+    try {
+      const newToDos = { ...toDos };
+      delete newToDos[key];
+      setToDos(newToDos);
+      await saveToDos(newToDos);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+...
+
+그럼 기존의 toDos를 새로운 object에 복사해 delete키워드로 해단 key와 일치하는 property를 제거하고 다시 setToDos로 toDos state를 재설정 해주고 다시 async storage(웹에서 local storage같은)의 @toDos라는 key에 저장해 주는 것이다.(local storage의 값의 전체를 바꿔주는 것이 아닌 일부만 수정해 주는 것은 안되나?) 우리는 object를 mutating(가변)하고 있지만 복제한 object이고 toDos object state는 건드리지 않기 때문에 괜찮다. state 원본?은 절대 mutate 하면 안된다.
+
+이제 삭제는 되지만 우리는 사용자가 정말 toDo를 지우고 싶은지 확인 하고 싶다. (confirm에 if문 사용?) 이것을 해주기 위해 Alert API를 배울 것이다.
+React Native Alert - https://reactnative.dev/docs/alert
+Alert API는 대화창(팝업창)을 실행시킨다. 두 가지 method가 있는데 하나는 alert()이고 다른 하나는 prompt()이다. (prompt()는 iOS에서만 작동) 간단하게 말하자면 prompt()는 사용자에게 text를 받는 것이다. 우리는 android, iOS에서 둘 다 사용할 수 있게 prompt()가 아닌 alert()을 사용해줄 것이다. alert을 제목이 있고, 메시지도 있고, 버튼도 보낼 수 있다. deleteToDo에서 삭제하는 로직은 실행되지 않게 return해주고 return 위에 Alert API를 테스트해볼 것이다.
+ex) App.js
+...
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  Alert,
+} from "react-native";
+...
+  const deleteToDo = async (key) => {
+    try {
+      Alert.alert("Delete To Do", "Are you sure?");
+      return;
+      const newToDos = { ...toDos };
+      delete newToDos[key];
+      setToDos(newToDos);
+      await saveToDos(newToDos);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+...
+
+* storage가 null이면 error가 발생해서 아래처럼 수정
+ex) App.js
+...
+      <ScrollView>
+        {toDos &&
+          Object.keys(toDos).map((key) =>
+            toDos[key].working === working ? (
+              <View style={styles.toDo} key={key}>
+                <Text style={styles.toDoText}>{toDos[key].text}</Text>
+                <TouchableOpacity onPress={() => deleteToDo(key)}>
+                  <Text>❌</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null,
+          )}
+      </ScrollView>
+...
+
+모바일에서 todo를 추가하고 x버튼을 누르면 "Delete To Do"라는 제목과 "Are you sure?"라는 내용이 나오고 우측 하단에 ok라는 버튼이 있는 팝업이 띄워지는 것을 확인할 수 있다. 그리고 console에는 해당 todo의 key(Date.now())가 출력된다. 하지만 우리가 원하는 버튼은 "취소" 혹은 "확인" 문구가 있는 두개의 버튼이다. 그래서 공식문서를 보고 우리가 보낼 수 있는 버튼을 찾아 볼 것이다. button은 array이다?
+ex) App.js
+...
+      Alert.alert("Delete To Do", "Are you sure?", [
+        { text: "Cancel" },
+        { text: "I'm Sure" },
+      ]);
+...
+
+이렇게 하면 alert창에 Cancel과 I'm Sure 버튼 두개가 생긴다. 이제 공식문서에서 알려준 text라는 property를 사용했고 onPress라는 property도 있는데 이건 버튼을 눌렀을 때 실행되는 function이다. 즉, 팝업창의 버튼을 눌렀을 때 무언가 실행시킬 수 있다는 것이다. 우리는 "I'm Sure"버튼에만 onPress를 설정해줄 것이다. 왜냐면 취소는 아무동작도 하지 않고 그것도 필요한 동작이기때문이다. 그럼 이제 return의 하단에 있던 로직들을 잘라서 onPress function 안에 넣어줄 것이다.
+참고로 saveToDos에 await는 없어도 된다. 그냥 빨리 진행시키고 나중에 저장시키고 싶으면 await을 없이해도 된다.
+ex) App.js
+...
+  const deleteToDo = (key) => {
+    Alert.alert("Delete To Do", "Are you sure?", [
+      { text: "Cancel" },
+      {
+        text: "I'm Sure",
+        onPress: () => {
+          const newToDos = { ...toDos };
+          delete newToDos[key];
+          setToDos(newToDos);
+          saveToDos(newToDos);
+        },
+      },
+    ]);
+  };
+...
+
+이제 android에서 확인해보면 todo를 생성하고 x버튼을 누르면 우리가 설정한 alert창이 뜨고 I'm Sure 버튼을 누르면 todo가 잘 삭제되는 것을 확인할 수 있다. 참고로 iOS에서는 AlertButtonStyle라는 prop으로 alert에 style을 입힐 수 있다. 예를 들어 AlertButtonStyle: "destructive"라고 주면 버튼의 text가 빨간색으로 변한다.
+
+이제 x이모지를 font Awesome 아이콘으로 변경해줄 것이다. 저번 날씨앱을 만들 때 참고했던 icons.expo.fyi 에서 아이콘을 선택해 사용할 것이다.
+참고 - https://icons.expo.fyi/
+Fontisto 옵션을 선택하고 trash를 검색하면 나오는 아이콘을 사용하면 된다.
+ex) App.js
+...
+import { Fontisto } from "@expo/vector-icons";
+...
+      <ScrollView>
+        {toDos &&
+          Object.keys(toDos).map((key) =>
+            toDos[key].working === working ? (
+              <View style={styles.toDo} key={key}>
+                <Text style={styles.toDoText}>{toDos[key].text}</Text>
+                <TouchableOpacity onPress={() => deleteToDo(key)}>
+                  <Fontisto name="trash" size={18} color={theme.gray} />
+                </TouchableOpacity>
+              </View>
+            ) : null,
+          )}
+      </ScrollView>
+...
+
+이제 완성됐다.
+
+
+전체 코드
+ex) colors.js
+export const theme = {
+  bg: "black",
+  gray: "#3A3D40",
+  toDoBg: "#5C5C60",
+};
+
+ex) App.js
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { Fontisto } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { theme } from "./colors";
+
+const STORAGE_KEY = "@toDos";
+
+export default function App() {
+  const [working, setWorking] = useState(true);
+  const [text, setText] = useState("");
+  const [toDos, setToDos] = useState({});
+  useEffect(() => {
+    loadToDos();
+  }, []);
+  const travel = () => setWorking(false);
+  const work = () => setWorking(true);
+  const onChangeText = (payload) => setText(payload);
+  const saveToDos = async (toSave) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  const loadToDos = async () => {
+    try {
+      const s = await AsyncStorage.getItem(STORAGE_KEY);
+      setToDos(JSON.parse(s));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  const addToDo = async () => {
+    try {
+      if (text === "") {
+        return;
+      }
+      const newToDos = { ...toDos, [Date.now()]: { text, working } };
+      setToDos(newToDos);
+      await saveToDos(newToDos);
+      setText("");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  const deleteToDo = (key) => {
+    Alert.alert("Delete To Do", "Are you sure?", [
+      { text: "Cancel" },
+      {
+        text: "I'm Sure",
+        onPress: () => {
+          const newToDos = { ...toDos };
+          delete newToDos[key];
+          setToDos(newToDos);
+          saveToDos(newToDos);
+        },
+      },
+    ]);
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={work}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: working ? "white" : theme.gray,
+            }}
+          >
+            Work
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={travel}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color: !working ? "white" : theme.gray,
+            }}
+          >
+            Travel
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <TextInput
+        onSubmitEditing={addToDo}
+        onChangeText={onChangeText}
+        returnKeyType="done"
+        value={text}
+        placeholder={working ? "Add a To Do" : "Where do you want to go?"}
+        style={styles.input}
+      />
+      <ScrollView>
+        {toDos &&
+          Object.keys(toDos).map((key) =>
+            toDos[key].working === working ? (
+              <View style={styles.toDo} key={key}>
+                <Text style={styles.toDoText}>{toDos[key].text}</Text>
+                <TouchableOpacity onPress={() => deleteToDo(key)}>
+                  <Fontisto name="trash" size={18} color={theme.gray} />
+                </TouchableOpacity>
+              </View>
+            ) : null,
+          )}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.bg,
+    paddingHorizontal: 20,
+  },
+  header: {
+    justifyContent: "space-between",
+    flexDirection: "row",
+    marginTop: 100,
+  },
+  btnText: {
+    fontSize: 44,
+    fontWeight: "600",
+    color: "white",
+  },
+  input: {
+    backgroundColor: "white",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginVertical: 20,
+    fontSize: 18,
+  },
+  toDo: {
+    backgroundColor: theme.gray,
+    marginBottom: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  toDoText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+});

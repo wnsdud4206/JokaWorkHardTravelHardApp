@@ -1,0 +1,223 @@
+참고 - https://nomadcoders.co/react-native-for-beginners/lectures/3135
+
+
+
+/*
+댓글
+1.
+처음에 입력값이 아무것도 없을때 Object.keys(toDos)... 에서 null 에러가 발생해서 이렇게 수정했습니다. 혹시 비슷한 상황 겪는분들은 참고하세요.
+const loadToDos = async () => {
+const s = await AsyncStorage.getItem(STORAGE_KEY);
+console.log(s);
+s !== null ? setToDos(JSON.parse(s)) : null;
+};
+*/
+
+
+
+ex) App.js, work -> working 수정
+...
+const newToDos = { ...toDos, [Date.now()]: { text, working } };
+...
+
+이번 강의에서는 작은 박스를 수정해 볼 것이다. 에를 들어서, Work toDo는 work화면에서만 보이고 Travel toDo는 travel화면에서만 보이도록 할 것이다.
+만약 우리가 렌더링하는 toDo가 workng true 혹은 false를 가지고 있다면 그것을 모드하고 비교할 것이다.
+ex) App.js
+...
+      <ScrollView>
+        {Object.keys(toDos).map((key) =>
+          toDos[key].working === working ? (
+            <View style={styles.toDo} key={key}>
+              <Text style={styles.toDoText}>{toDos[key].text}</Text>
+            </View>
+          ) : null,
+        )}
+      </ScrollView>
+...
+
+이제 toDo들은 각각의 페이지에서만 보여지게 된다.
+
+다음은 이 toDo를 폰에 저장해야 한다. 왜냐하면 만약 사용자가 다른 곳에 가거나 앱을 닫고 다시 돌아와도 이전 상태 그대로의 toDo들을 보여줄 것이다. 이걸 하려면 expo로 돌아가야한다. 왜냐하면 expo에는 전에 말했던 AsyncStorage라는 module이 있기 때문이다.
+expo AsyncStorage
+- https://docs.expo.dev/versions/latest/sdk/async-storage/
+- https://react-native-async-storage.github.io/async-storage/docs/usage/
+
+> npx expo install @react-native-async-storage/async-storage
+위처럼 async storage 모듈을 설치해준다. (설치하면 배치파일이아닙니다 라고 뜨는데 npm list해서 보면 잘 설치되어 있는듯)
+* 참고로 설치할 때 expo를 넣어주는 이유는 현재 expo와 같은 버전의 모듈을 설치하기 위함이다.
+
+설치가 되었으면 공식문서대로 import해와서 사용하면 된다. AsyncStorage의 작동방식은 쉽다. 그냥 await AsyncStorage.setItem을 해주고 key와 value를 작성하면 된다. 물론 string type 문자만 저장 할 수 있다. 그럼 브라우저의 local storage처럼 작동한다. 단, await를 사용해야 한다.
+ex) expo AsyncStorage string value
+const storeData = async (value) => {
+  try {
+    await AsyncStorage.setItem('@storage_Key', value)
+  } catch (e) {
+    // saving error
+  }
+}
+
+ex) expo AsyncStorage object value
+const storeData = async (value) => {
+  try {
+    const jsonValue = JSON.stringify(value)
+    await AsyncStorage.setItem('@storage_Key', jsonValue)
+  } catch (e) {
+    // saving error
+  }
+}
+
+getItem도 비슷하다. (공식문서 Reading data 참고)
+
+이제 우리 프로젝트에서 saveToDos라는 function을 만들어준다. saveToDos function은 toDos를 string으로 바꿔주고 await AsyncStorage.setItem을 해 줄 것이다.
+saveToDos function은 toSave 형태의 toDos를 받고 toSave는 addToDo function을 통해서 saveToDos에 전해질 것이다. 그리고 addToDo function에 saveToDos function을 넣고 newToDos를 받도록 한다. 왜냐하면 addToDo function 안에서 우리는 새로운 object(newToDos)를 만들기 때문이다. 그리고 이 newToDos를 setToDos()로 업데이트하고 그 새로 업데이트한 object(toDos)를 saveToDos function으로 보내는 것이다. 그 다음 AsyncStorage.setItem()에 key와 value를 넣어주고 setItem은 promise를 return 해줄 것이다.
+ex) App.js
+...
+import AsyncStorage from "@react-native-async-storage/async-storage";
+...
+  const saveToDos = async (toSave) => {
+    await AsyncStorage.setItem("@toDos", JSON.stringify(toSave));
+  };
+  const addToDo = async () => {
+    if (text === "") {
+      return;
+    }
+    const newToDos = { ...toDos, [Date.now()]: { text, working } };
+    setToDos(newToDos);
+    await saveToDos(newToDos);
+    setText("");
+  };
+...
+
+우리는 지금까지 새로운 newToDos object를 만들어 주었다. 그리고 나서 newToDos를 saveToDos function으로 보내주었다. saveToDos는 key인 @toDos와 함께 AsyncStorage에 저장을 하고 있고 저장할 toDos를 stringify 해주고 있다. 같은 key를 나중에 사용할 것이기 때문에 key를 STORAGE_KEY라고 해줄 것이다.
+ex) App.js
+...
+const STORAGE_KEY = "@toDos";
+
+export default function App() {
+  const [working, setWorking] = useState(true);
+  const [text, setText] = useState("");
+  const [toDos, setToDos] = useState({});
+  const travel = () => setWorking(false);
+  const work = () => setWorking(true);
+  const onChangeText = (payload) => setText(payload);
+  const saveToDos = async (toSave) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  };
+...
+
+그리고 이제 loadToDos라는 새로운 function을 만들어 줄 것이다.
+ex) App.js
+...
+  const saveToDos = async (toSave) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  };
+  const loadToDos = async () => {                   // this
+    await AsyncStorage.getItem(STORAGE_KEY);
+  };
+...
+
+보다시피 local storage하고 유사하다. (setItem, getItem) 차이점은 await을 사용해야 된다는 것 뿐이다.
+이제 getItem은 string을 줄 것이다. (앱을 실행할 때 전에 입력했던 값들을 불러오는 건듯)
+ex) App.js
+...
+  const saveToDos = async (toSave) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  };
+  const loadToDos = async () => {
+    const s = await AsyncStorage.getItem(STORAGE_KEY);
+    console.log(s);
+  };
+  useEffect(() => {
+    loadToDos();
+  }, []);
+...
+
+아직 React Native에 관련된 건 AsyncStorage 밖에 안했다. 아직까지는 일반적인 javascript이다.
+이제 console에서 확인해보면 터미널에 null이 출력되는 것을 확일할 수 있다. 이 말은 toDos가 load되었지만 아무것도 없다는 뜻이다.
+그럼 각각의 Work와 Travel에 todo를 추가해보고 탭을 껐다가(혹은 어플을) 다시 연결해서(새로고침해도 됨) console을 확인해보면 아까 null과는 다르게 {"1676006923031":{"text":"work print","working":true},"1676006928529":{"text":"travel print","working":false}} 이런식으로 object가 출력되는 것을 볼 수 있다. 그리고 개발자도구에서 Application 탭에 Local Storage > http//~ 에서 보면 @toDos 라는 key에 console에 출력된 그대로 값이 저장된 것을 확인할 수 있다.(아직 불러온 값을 프론트에 출력하지 않아서 아무것도 없는 것)
+
+useEffect의 위치를 위로 올려준다.
+ex) App.js
+...
+const STORAGE_KEY = "@toDos";
+
+export default function App() {
+  const [working, setWorking] = useState(true);
+  const [text, setText] = useState("");
+  const [toDos, setToDos] = useState({});
+  useEffect(() => {
+    loadToDos();
+  }, []);
+  const travel = () => setWorking(false);
+  const work = () => setWorking(true);
+  const onChangeText = (payload) => setText(payload);
+  const saveToDos = async (toSave) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  };
+  const loadToDos = async () => {
+    const s = await AsyncStorage.getItem(STORAGE_KEY);
+    console.log(s);
+  };
+  const addToDo = async () => {
+    if (text === "") {
+      return;
+    }
+    const newToDos = { ...toDos, [Date.now()]: { text, working } };
+    setToDos(newToDos);
+    await saveToDos(newToDos);
+    setText("");
+  };
+...
+
+이제 아까 출력된 object(object처럼 보이지만 string type)을 진짜 object로 만들어 줘야 한다. 그러기 위해서는 JSON.parse를 하면 된다. parse는 string을 javascript object로 만들어 주는 것이고 stringify는 javascript object를 string으로 만들어 주는 것이다. 참고로 try catch문을 사용하지 않았지만 사용하는 것이 좋다.
+참고 - https://react-native-async-storage.github.io/async-storage/docs/usage/
+만약 이걸 실제 앱으로 만든다면 항상 try catch 문을 사용하는 것이 매우 중요하다. 왜냐면 저장하는 데 문제가 생기는 경우가 있을 수 있기 때문이다. 에를 들어서 사용자 폰에 저장 공간이 없을 수 있거나 하는 문제가 있을 수 있기 때문이다.
+ex) App.js
+...
+  const saveToDos = async (toSave) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  const loadToDos = async () => {
+    try {
+      const s = await AsyncStorage.getItem(STORAGE_KEY);
+      console.log(JSON.parse(s));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  const addToDo = async () => {
+    try {
+      if (text === "") {
+        return;
+      }
+      const newToDos = { ...toDos, [Date.now()]: { text, working } };
+      setToDos(newToDos);
+      await saveToDos(newToDos);
+      setText("");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+...
+
+다시 console.log(JSON.parse(s));를 콘솔에서 보면 아까와는 다르게 string이 아닌 object type으로 출력된 것을 확인할 수 있다.
+이제 이 JSON.parse를 state에 넣어 주면 된다.
+ex) App.js
+...
+  const loadToDos = async () => {
+    try {
+      const s = await AsyncStorage.getItem(STORAGE_KEY);
+      setToDos(JSON.parse(s));                              // this
+    } catch (e) {
+      console.error(e);
+    }
+  };
+...
+
+이렇게 하고 새로고침하면 아까전에 저장했떤 todo들이 출력되는 것을 확인할 수 있다.
+
+다음 강의에서는 todo항목을 지우는 법을 알아볼 것이다.
