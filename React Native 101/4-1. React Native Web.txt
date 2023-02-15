@@ -1,0 +1,90 @@
+참고 - https://nomadcoders.co/react-native-for-beginners/lectures/3140
+
+
+
+/*
+댓글
+1.
+Configuration with app.json / app.config.js
+app.json은 코드에 속하지 않는 앱 부분을 설정하기 위한 파일입니다.
+https://docs.expo.dev/workflow/configuration/
+
+app.json 또는 app.config.json의 "expo" 키에서 사용할 수 있는 속성 목록
+https://docs.expo.dev/versions/latest/config/app/
+
+Platform
+https://reactnative.dev/docs/platform
+*/
+
+
+
+내 프로젝트 페이지 - https://expo.dev/@jokaarch/JokaWorkHardTravelHardApp?serviceT
+
+
+
+이번 강의에서는 버그 몇 개를 고치고 expo를 이용해 어플리케이션을 업데이트 하는 방법을 알아볼 것이다. expo로 배포한 것의 icon도 바꿔보고 splash screen(시작화면)을 어떻게 바꾸는지 알아볼 것이다.
+
+눈치챘는지 모르겠지만 매번 우리 앱을 새로고침 할 때마다(폰에서) 하얀 배경에 동그라미가 띄워진 splash screen을 볼 수 있다. expo는 우리가 필요로하는 요소들을 다 갖고 있다.
+
+우선 버그를 고치고 안드로이드를 위한 명확한 코드 작성 방법과 iOS를 위한 구체적인 코드, 또 웹을 위한 정확한 작성 방법을 알아볼 것이다.
+
+이제 아주 흥미로운 버그를 보여줄 건데 어플리케이션에서 Travel 버튼을 눌러도 Work 버튼을 눌러도 둘 다 실행이 된다. web에서 Work, Travel 버튼의 동작은 잘 된다. 하지만 fontStyle이 앱에서 볼 때에 비해 더 작게 보인다.(난 그대로 잘 나오는데?) 근데 stylesheet를 쓰는 대신에 btnText의 내용을 복사해서 Work와 Travel 버튼의 Text component의 style prop안에 직접 넣어주면 앱에서 처럼 잘 보이는 것을 확인 할 수 있다. 아주 흥미로운 버그인데 우리가 바라는 만큼 안정적이지 않다. 이제 stylesheet의 btnText를 삭제하면 website도 가지고 있고 iOS도 가지고 있고 안드로이드도 가지게 된다.
+코드를 고치고 Publish or republish project 버튼을 누르면 된다고 하는데 그냥 다시 터미널에 expo publish 명령어를 입력하면 되는 것 같다.
+
+* 모바일에서 상태바가 보이지 않아 StatusBar style="auto"를 style="light"로 수정
+ex) <StatusBar style="light" />
+
+업데이트 될 동안 app.json이라는 걸 살펴볼 것이다.
+expo app.json / app.config.js - https://docs.expo.dev/versions/latest/config/app/
+우리 프로젝트에도 보면 App.js와 같은 디렉토리에 app.json이라는 파일이 있는 것을 볼 수 있다. app.json은 우리 어플리케이션을 우리가 원하는대로 만들기 위해 편집해야 하는 파일이다. 파일을 열어보면 name, slug 같은 것들이 있고 splash 스크린도 있고 ios부분에서는 supportsTablet으로 tablet을 지원하는지 아닌지도 설정할 수 있고 android에서는 android 환경설정(배경색같은)이나 web도 설정할 수 있다. 이렇게 app.json은 매우 강력한 파일이다. 위 공식문서에서 사용 가능한 모든 설정을 볼 수 있다. 예를 들어 페이스북 정보로 로그인을 가능하게 하고 싶을 때 facebookAppId 가 필요할 것이고 여러 언어를 다뤄야 한다면 locales를 사용할 수 있다. 또 ios에서는 buildNumber, backgroundColor(모든 View? component? 뒤에 색을 지정할 수 있음)등 많은 것들을 설정할 수 있다. 또 isTabletOnly라는 것이 있는데 오직 테블릿에서만 쓸 수 있게 설정할 수 있다. Apple Sign-In을 사용할 건지 말 건지도 설정할 수 있다.(전화번호는?)
+
+이제 우리가 당장 바꿀 수 있는 것은 아이콘이다. 다행히도 프로젝트를 만들면 자동으로 생성되는 assets 디렉토리가 있다. assets 안에 우리가 필요한 모든게 다 들어있다. 우선 splage.png 파일인 splash screen이 있는데 이게 바로 앱이 처음 로드되기 전에 보이는 screen 혹은 이미지이다. 물론 아이콘(icon.png)도 있다. 이 아이콘 이미지를 바꾸면 구글이나 iOS app store, 그리고 expo 웹사이트에서도 보이게 된다. favicon(즐겨찾기 아이콘)은 웹이서 보일 것이고 adaptive-icon은 안드로이드를 위한 것이다.
+
+이제 아이콘을 만들고 그 파일들을 expo에 업로드(publish?) 할 것이다. 근데 이걸 하기 전에 웹에 있는 문제를 해결해야만 한다. 웹이서는 todo의 삭제버튼을 눌러도 아무일도 일어나지 않는다.(진짜네..) 왜냐하면 Alert API(React Native)가 웹에서는 동작하지 않기 때문이다. console에 에러도 찍히지 않지만 클릭해도 실행되지 않는다. 그래서 "Platform" 이라고 불리는 react native에서 직접 불러오는 API를 보여주려한다.
+React Native Platform - https://reactnative.dev/docs/platform
+Platform API로 지금 우리가 어떤 플렛폼에 있는지 알 수 있다. 그래서 우리가 해야 하는 건 Platform을 import하고 우리가 어떤 플렛폼에 있는지 아니면 우리가 웹에 있는지만 확인할 것이다. 우리가 웹에 있다면 방법을 조금 다르게 할 것이다. 우리가 안드로이드나 iOS에 있을 때만 Alert API를 쓰는 것이다. 이제 여기 expo 웹사이트에 컴포넌트나 API 같은 것들이 왜 있느지 이해가 될 것이다.(React Native에서는 플렛폼에 대한 API가 별로 없는듯) 예를 들어 expo 공식문서에서 AsyncStorage 항목을 보면 어떤 플렛폼에서 동작을 하는지 알려주는데 이것으로 알 수 있는 것은 AsyncStorage는 iOS, Android에서 사용할 수 있고 웹에서는 localStorage역할을 겸하는 것이다. 그래서 AsyncStorage에 사용 가능한 플렛폼에 web이 있는 것이다.
+
+이제 platform을 import했으니까 우리가 해야 할 건 플랫폼 OS를 체크하는 일이다. if(Platform.OS === "") 까지 하면 "" 안에 Android, iOS, Mac OS, web, windows 옵션들이 나온다. 이건 설명 안했던 부분인데 바로 Mac OS와 Windows가 있다는 것이다. 왜냐하면 React Native for Windows와 React Native for Mac OS가 있기 때문이다. 아무튼 확인 했는데 만약 플랫폼이 웹이라면 혹은 웹이 아니라면 우린 뭔가 해줄 것이다. 웹이 아니라면 우리가 작성했던 Alert API로직들이 들어갈 것이고 웹일 경우 브라우저 API인 confirm을 사용할 것이다. confirm은 브아루저(크롬, 파이어폭스 등등) API인데 유저에게 메시지를 보여주고 유저가 confirm을 했는지 안 했는지 boolean 값으로 반환해준다. 만약 유저가 승인 했다면 우리는 그 toDo를 삭제할 것이다.
+ex) App.js
+...
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  Alert,
+  Platform,
+} from "react-native";
+...
+  const deleteToDo = (key) => {
+    if (Platform.OS === "web") {
+      const ok = confirm("Do you want to delete this To Do?");
+      if (ok) {
+        const newToDos = { ...toDos };
+        delete newToDos[key];
+        setToDos(newToDos);
+        saveToDos(newToDos);
+      }
+    } else {
+      Alert.alert("Delete To Do", "Are you sure?", [
+        { text: "Cancel" },
+        {
+          text: "I'm Sure",
+          onPress: () => {
+            const newToDos = { ...toDos };
+            delete newToDos[key];
+            setToDos(newToDos);
+            saveToDos(newToDos);
+          },
+        },
+      ]);
+    }
+  };
+...
+
+이제 React Native web에서 todo를 추가하고 삭제를 하려고 하면 삭제할 것인지 확인 메시지와 버튼이 나오고 승인하면 정상적으로 삭제되는 것을 확인할 수 있다. 앱에서도 이전과같이 정상적으로 동작하는 것을 확인할 수 있다.
+
+이제 모든 것이 잘 작동한다면 애플리케이션을 업데이트 할 것이다.(expo publish)
+
+다음 영상에서는 React Native Mac OS와 React Native for Windows, React Native VR에 대해 보여줄 것이다. 그리고 우리가 쓰고 있는 기본 아이콘(assets)보다 더 괜찮은 아이콘을 app store에 맞춰서 만들도록 할 것이다. 그리고 또 expo가 좋지 않은 부분에 대해 얘기해볼 것이다.

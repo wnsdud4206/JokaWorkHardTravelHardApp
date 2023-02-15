@@ -2,3 +2,74 @@
 
 
 
+앱 스토어에 배포하는 법?
+- https://docs.expo.dev/archive/classic-updates/publishing/
+- https://medium.com/duckuism/expo-react-native-create-app-%EC%9C%BC%EB%A1%9C-%EC%95%B1%EC%8A%A4%ED%86%A0%EC%96%B4%EC%97%90-%EB%B0%B0%ED%8F%AC%ED%95%98%EA%B8%B0-d1c9af5c8802
+
+
+이번 강의에서는 Expo에 대해서 얘기하고 어떻게 프로젝트를 publish하는지 얘기할 것이다. 그리고 이 앱을 어떻게 앱스토어에 보내는지 얘기해볼 것이다.
+
+첫 번째 프로젝트를 publish하는 것은 쉽다. publish 버튼을 누르면 된다? 현재는 dev사이트가 사라져서 터미널에 expo publish(npx expo publish?)라고 입력하면 된다고 한다.
+나의 프로젝트를 expo 웹사이트에 공개하는 건 정말 유용하다. 왜냐면 모든 사람과 코드를 공유할 수 있기 때문이다. 저번 강의에서 알려준 코드 챌린지가 끝나면 publish를 클릭하면 된다.
+물론 이렇게 배포한 것은 실제 사용자들을 위한 것이 아니라 테스트를 위한 것이다.
+expo는 iOS, android 뿐만 아니라 web으로도 실행시킬 수 있다. 이게 가능한 이유는 expo가 react native web이라는 다른 프로젝트하고 통합되어 있기 때문이다. react native web이 몇몇 사람들에게는 조금 헷갈릴 수 있다. 왜냐하면 기본적으로 web에서는 react.js가 익숙하기 때문이다. React Native Web은 반대이다. React Native web은 react native 코드를 이용한 프로젝트이다. 예를 들어 react native web에서는 이 View를 div로 바꿔준다. 그 외에도 Image를 img로 Text를 span으로 바꿔준다. 이 말은 즉 expo로 작업을 하면 iOS앱이나 android 뿐만 아니라 웹사이트도 무료로 만들 수 있다는 의미이다.
+
+다시 Run in web browser를 클릭해(이젠 없음, 아마 다른 명령어가 있을것, npm start > w 랑은 다른가?) 웹에서 열면 다른 port에서 열렸는데 버그가 생겼다. 지금 있는 버그는 가끔 AsyncStorage가 null이기 때문에 생기는 것이다. 왜냐하면 AsyncStorage에 아무것도 저장이 안 되어 있을 수도 있기 때문이다.
+ex) App.js, 난 이렇게 처리해줌
+...
+      const t = await AsyncStorage.getItem(TODO_STORAGE_KEY);
+      setToDos(JSON.parse(t));
+...
+{toDos && ... }     // null이 아니면 실행
+
+t가 null이면 parse를 할 수 없다.
+ex) App.js, 강의에서 해결법
+...
+      const t = await AsyncStorage.getItem(TODO_STORAGE_KEY);
+      if (t) {
+        setToDos(JSON.parse(t));
+      }
+...
+
+이렇게 해주면 해결된다. 하지만 style에 문제가 생기는데 하나씩 수정해서 똑같이 만들면 된다.
+
+Alert API도 동작하지 않는데 왜냐면 alert은 react native web에서는 작동하지 않기 때문이다. 이 문제는 다음 영상에서 해결할 것이다.
+
+expo가 대단한 점은 한 가지 코드로 세 개의 platform 앱을 만들었다. 모두 Expo, react native, react native web이 있어서 가능한 것이다.
+기억해야 할 것은 react native web은 react native가 일반적인 html로 바뀌는 것이다. react native web은 이 모든 것들을 div로 바꾸어 주고 styles로 추가하고 모든 것들을 해주었다.
+
+
+
+
+
+npx아니고 그냥 expo publish로 배포
+› Expo SDK: 47.0.0
+› Release channel: default
+› Workflow: Managed
+
+Building optimized bundles and generating sourcemaps...
+Starting Metro Bundler
+Started Metro Bundler
+Android Bundling complete 98346ms
+
+Bundle                     Size
+┌ index.ios.js          1.29 MB
+├ index.android.js       1.3 MB
+├ index.ios.js.map      4.25 MB
+└ index.android.js.map  4.27 MB
+
+💡 JavaScript bundle sizes affect startup time. Learn more: https://expo.fyi/javascript-bundle-sizes
+
+Analyzing assets
+Saving assets
+No assets changed, skipped.
+
+Processing asset bundle patterns:
+- C:\JOKA\Google_STUDY\STUDY\WEB\React Native\JokaWorkHardTravelHardApp\**\*    
+
+Uploading JavaScript bundles
+Publish complete
+
+📝  Manifest: https://exp.host/@jokaarch/JokaWorkHardTravelHardApp/index.exp?sdkVersion=47.0.0 Learn more: https://expo.fyi/manifest-url
+⚙️   Project page: https://expo.dev/@jokaarch/JokaWorkHardTravelHardApp?serviceT
+ype=classic&distribution=expo-go Learn more: https://expo.fyi/project-page  
